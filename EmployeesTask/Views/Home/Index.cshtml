@@ -1,0 +1,103 @@
+﻿<h1>All Employees</h1>
+@model IEnumerable<EmployeesTask.Models.Employees>
+<div>
+    <button type="button" id="btnCreate" class="btn btn-info btn-lg" data-toggle="modal" data-target="#CreateModel">Add Employee</button>
+</div>
+
+@*Render all Employees Partial view*@
+<br />
+<div id="AllEmps">
+    <partial name="GetAllEmployees" />
+</div>
+
+
+@*Add Employee PopUp*@
+<div id="CreateModel" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"> Add New Employee</h4>
+            </div>
+            <div class="modal-body">
+                <input class="form-control" type="text" id="EmpName" placeholder="Name">
+                <br />
+                <input class="form-control" id="EmpSalary" type="number" placeholder="Salary">
+                <p id="ErrorMsg" style="color:red; font-size:x-large"></p>
+            </div>
+            <div class="modal-footer">
+                <input type="button" value="Add" id="AddEmployeeClicked" class="btn btn-primary" />
+                <input type="button" value="Cancel" id="btnCancel" class="btn btn-secondary" data-dismiss="modal" />
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*ValidationCheck*@
+<script>
+    function checkValidation() {
+        var isValid = true;
+        if ($("#EmpName").val() == null || $("#EmpName").val() == '') {
+
+            isValid = false;
+        }
+        if ($("#EmpSalary").val() == null || $("#EmpSalary").val() == '' || $("#EmpSalary").val() == 0) {
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+</script>
+
+@*Add Employee API call*@
+<script type="text/javascript">
+    $(function () {
+
+            $("#AddEmployeeClicked").click(function () {
+
+                if (checkValidation()) {
+                    var Employee =
+
+                    {
+                        EmployeeName: $('#EmpName').val(),
+                        EmployeeSalary: Number($('#EmpSalary').val())
+                    }
+                    $.ajax({
+                        type: 'POST',
+                        url: 'https://localhost:44380/api/employees',
+                        contentType: 'application/json; ',
+                        data: JSON.stringify(Employee),
+                        dataType: 'json',
+                        success: function (data) {
+                            $('#AllEmps').load('@Url.Action("LoadAllEmployeesInPartilaView", "Home")');
+                            $('#EmpName').val("");
+                            $('#EmpSalary').val("");
+                            $('#ErrorMsg').text("");
+
+                        }
+                    });
+                    $('#CreateModel').trigger('click');
+
+                }
+                else {
+                    $('#ErrorMsg').text("All Fields are required please Enter Valid Data ")
+
+                }
+            });
+    })
+
+    $(function () {
+        $("#btnCancel").click(function () {
+            $('#EmpName').val("");
+            $('#EmpSalary').val("");
+            $('#ErrorMsg').text("")
+              });
+    })
+
+</script>
+
+
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+

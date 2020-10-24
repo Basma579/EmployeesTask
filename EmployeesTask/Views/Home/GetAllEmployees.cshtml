@@ -1,0 +1,191 @@
+﻿@model IEnumerable<EmployeesTask.Models.Employees>
+
+<div id="DivAllEmployees">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Employee Name</th>
+                <th scope="col">Employee Salary</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var employee in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => employee.EmployeeName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => employee.EmployeeSalary)
+                    </td>
+                    <td>
+                        <button data-id="@employee.EmployeeID" id="btnEdit" data-toggle="modal" data-target="#UpdateModel" class="ModalClick btn btn-success"> Edit </button>
+                        <button value="@employee.EmployeeName" id="@employee.EmployeeID" onclick="ShowDeletePopUp(this)" data-target="#ModelDelete" class="btn btn-danger" data-toggle="modal">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+</div>
+
+
+
+
+
+
+@*Update Employee Pop-UP*@
+<div id="UpdateModel" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"> Edit Employee</h4>
+            </div>
+            <div class="modal-body">
+                <input class="form-control" id="Name" placeholder="Name"> <br />
+                <input class="form-control " id="Salary" placeholder="Salary">
+                <p id="EditErrorMsg" style="color:red; font-size:x-large"></p>
+            </div>
+            <div class="modal-footer">
+                <input type="button" value="Save" id="Click"  class="btn btn-primary" />
+                <input type="button" value="Cancel" id="ButtonCancel" class="btn btn-secondary"  data-dismiss="modal" />
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*Delete Employee Pop-UP*@
+<div id="ModelDelete" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-body">
+                <p style="color:black; font-size:large" id="DeletedEmpName">Are you sure you want to delete Employee </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="DeleteEmployee" onclick="document.getElementById('ModelDelete').style.display='none'" data-dismiss="modal" class="btn btn-primary">Delete</button>
+                <button type="button" onclick="document.getElementById('ModelDelete').style.display='none'" data-dismiss="modal" class="btn btn-secondary small">Cancel</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+@*Update Employee API call*@
+<script type="text/javascript">
+    var UpdatedEmployeeID;
+    $(function () {
+        $(".ModalClick").click(function () {
+                var passedID = Number($(this).data('id'));//get the id of the selected Employee
+                UpdatedEmployeeID = passedID;
+                $.ajax({
+                    type: 'GET',
+                    url: 'https://localhost:44380/api/employees/' + passedID,
+                    contentType: 'application/json; ',
+                    dataType: 'json',
+                    success: function (data) {
+                        $('#Salary').val(data.employeeSalary)
+                        $('#Name').val(data.employeeName)
+                    }
+                });
+        });
+    })
+
+    $(function () {
+        $("#Click").click(function () {
+            if (EditcheckValidation()) {
+                var Employee =
+                {
+                    EmployeeID: UpdatedEmployeeID,
+                    EmployeeName: $('#Name').val(),
+                    EmployeeSalary: Number($('#Salary').val())
+                }
+
+                $.ajax({
+                    type: 'PUT',
+                    url: 'https://localhost:44380/api/employees/' + UpdatedEmployeeID,
+                    contentType: 'application/json; ',
+                    data: JSON.stringify(Employee),
+                    dataType: 'json',
+                    success: function (data) {
+                        $('#DivAllEmployees').load('@Url.Action("LoadAllEmployeesInPartilaView", "Home")');
+                    }  
+                });
+
+                $('#UpdateModel').trigger('click');
+            }
+            else {
+            $('#EditErrorMsg').text("All Fields are required please Enter Valid Data ")
+        }
+        });
+    })
+
+
+    $(function () {
+        $("#ButtonCancel").click(function () {
+            $('#Name').val("");
+            $('#Salary').val("");
+            $('#EditErrorMsg').text("")
+        });
+    })
+</script>
+
+@*Delete Employee API call*@
+<script type="text/javascript">
+    var DeletedEmployeeID;
+    function ShowDeletePopUp(objbutton) {
+        var modal = document.getElementById('ModelDelete');
+        document.getElementById('ModelDelete').style.display = 'block'
+        DeletedEmployeeID = objbutton.id;
+        $('#DeletedEmpName').append(objbutton.value)
+    }
+</script>
+
+<script type="text/javascript">
+    $(function () {
+        $("#DeleteEmployee").click(function () {
+             $.ajax({
+                 type: 'Delete',
+                 url: 'https://localhost:44380/api/employees/' + DeletedEmployeeID,
+                contentType: 'application/json; ',
+                dataType: 'json',
+                success: function (data) {
+                    $('#DivAllEmployees').load('@Url.Action("LoadAllEmployeesInPartilaView", "Home")'); // reload  partial view after delete
+                 
+
+                }
+            });
+        });
+    })
+
+</script>
+
+@*ValidationCheck*@
+<script>
+    function EditcheckValidation() {
+        var isValid = true;
+        if ($("#Name").val() == null || $("#Name").val() == '') {
+
+            isValid = false;
+        }
+        if ($("#EmpSalary").val() == null || $("#Salary").val() == '' || $("#Salary").val() == 0) {
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+</script>
+
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+
+
